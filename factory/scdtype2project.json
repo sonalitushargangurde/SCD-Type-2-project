@@ -1,0 +1,9 @@
+{
+	"name": "scdtype2project",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d4768d8c-676e-4487-8c1c-52082a1d9a1d",
+		"tenantId": "8b436efc-61e1-4899-ae8d-627c119005a0"
+	}
+}

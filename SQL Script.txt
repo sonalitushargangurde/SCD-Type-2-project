@@ -1,0 +1,55 @@
+--Staging Table
+CREATE TABLE stg_customer (
+    customer_id INT,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    city VARCHAR(50),
+    status VARCHAR(20),
+    load_date DATETIME DEFAULT GETDATE()
+);
+
+
+--Dimension table
+CREATE TABLE dim_customer (
+    customer_sk INT IDENTITY PRIMARY KEY,
+    customer_id INT,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    city VARCHAR(50),
+    status VARCHAR(20),
+    start_date DATETIME,
+    end_date DATETIME,
+    is_current CHAR(1)
+);
+
+--Stored Procedure
+CREATE PROCEDURE sp_scd2_customer
+AS
+BEGIN
+    MERGE dim_customer AS tgt
+    USING stg_customer AS src
+    ON tgt.customer_id = src.customer_id
+    AND tgt.is_current = 'Y'
+
+    WHEN MATCHED AND (
+           ISNULL(tgt.name,'')   <> ISNULL(src.name,'')
+        OR ISNULL(tgt.email,'')  <> ISNULL(src.email,'')
+        OR ISNULL(tgt.city,'')   <> ISNULL(src.city,'')
+        OR ISNULL(tgt.status,'') <> ISNULL(src.status,'')
+    )
+    THEN
+    UPDATE SET
+        tgt.end_date = GETDATE(),
+        tgt.is_current = 'N'
+
+    WHEN NOT MATCHED BY TARGET
+    THEN
+    INSERT (
+        customer_id, name, email, city, status,
+        start_date, end_date, is_current
+    )
+    VALUES (
+        src.customer_id, src.name, src.email, src.city, src.status,
+        GETDATE(), '9999-12-31', 'Y'
+    );
+END;
